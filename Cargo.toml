@@ -37,6 +37,7 @@ version = "0.23"
 default = ["import", "utils", "names"]
 extras = ["gltf-json/extras"]
 names = ["gltf-json/names"]
+preserve_order = ["gltf-json/preserve_order"]
 utils = []
 import = ["base64", "image"]
 KHR_lights_punctual = ["gltf-json/KHR_lights_punctual"]
