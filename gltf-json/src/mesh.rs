@@ -2,7 +2,7 @@ use gltf_derive::Validate;
 use serde_derive::{Serialize, Deserialize};
 use serde::{de, ser};
 use serde_json::from_value;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fmt;
 use crate::validation::{Checked, Error, Validate};
 use crate::{accessor, extensions, material, Extras, Index};
@@ -104,7 +104,7 @@ pub struct Mesh {
 pub struct Primitive {
     /// Maps attribute semantic names to the `Accessor`s containing the
     /// corresponding attribute data.
-    pub attributes: HashMap<Checked<Semantic>, Index<accessor::Accessor>>,
+    pub attributes: BTreeMap<Checked<Semantic>, Index<accessor::Accessor>>,
 
     /// Extension specific data.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -202,7 +202,7 @@ pub struct MorphTarget {
 }
 
 /// Vertex attribute semantic name.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub enum Semantic {
     /// Extra attribute name.
     #[cfg(feature = "extras")]
