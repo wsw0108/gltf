@@ -101,6 +101,9 @@ pub struct SparseIter<'a, T: Item> {
     /// Sparse values iterator.
     values: ItemIter<'a, T>,
 
+    /// Iterator size
+    size: u32,
+
     /// Iterator counter.
     counter: u32,
 }
@@ -113,12 +116,14 @@ impl<'a, T: Item> SparseIter<'a, T> {
         base: Option<ItemIter<'a, T>>,
         indices: SparseIndicesIter<'a>,
         values: ItemIter<'a, T>,
+        size: u32,
     ) -> Self {
         SparseIter {
             base,
             indices: indices.peekable(),
             values: values,
             counter: 0,
+            size: size,
         }
     }
 }
@@ -126,10 +131,11 @@ impl<'a, T: Item> SparseIter<'a, T> {
 impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-        let next_base_value = self.base.as_mut().map(|iter| iter.next()).unwrap_or(Some(T::zero()));
-        if next_base_value.is_none() {
+        if self.counter >= self.size {
             return None;
         }
+
+        let next_base_value = self.base.as_mut().map(|iter| iter.next()).unwrap_or(Some(T::zero()));
 
         let mut next_value = next_base_value.unwrap();
         let next_sparse_index = self.indices.peek().clone();
@@ -146,7 +152,7 @@ impl<'a, T: Item> Iterator for SparseIter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = self.values.len() - self.counter as usize;
+        let hint = (self.size - self.counter) as usize;
         (hint, Some(hint))
     }
 }
@@ -333,7 +339,7 @@ impl<'a, 's, T: Item> Iter<'s, T> {
                 };
                 ItemIter::new(subslice, stride)
             };
-            Some(Iter::Sparse(SparseIter::new(base_iter, index_iter, value_iter)))
+            Some(Iter::Sparse(SparseIter::new(base_iter, index_iter, value_iter, accessor.count() as u32)))
         } else {
             debug_assert_eq!(mem::size_of::<T>(), accessor.size());
             debug_assert!(mem::size_of::<T>() > 0);
